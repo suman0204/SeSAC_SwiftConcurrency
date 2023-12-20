@@ -5,6 +5,52 @@
 //  Created by 홍수만 on 2023/12/19.
 //
 
+/*
+ @MainActor: Swift Concurrency 를 작성한 코드에서 다시 메인 쓰레드로 돌려주는 역할을 수행
+ */
+
+/*
+ SwiftUI -> UIKit
+ UIKit -> SwiftUI
+ */
+
+class MyClassA {
+    var target: MyClassB?
+    
+    deinit {
+        print("MyClassA Deinit")
+    }
+}
+
+class MyClassB {
+    var target: MyClassA?
+    
+    deinit {
+        print("MyClassB Deinit")
+    }
+}
+
+class DetailViewController: UIViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        print(#function)
+        
+        view.backgroundColor = .gray
+        
+        let a = MyClassA()
+        let b = MyClassB()
+        
+        a.target = b
+        b.target = a
+        
+//        a.target = nil
+    }
+    
+    deinit {
+        print("DEINIT")
+    }
+}
+
 import UIKit
 
 class ViewController: UIViewController {
@@ -12,6 +58,16 @@ class ViewController: UIViewController {
     @IBOutlet var posterImageView: UIImageView!
     @IBOutlet var secondImageView: UIImageView!
     @IBOutlet var thirdImageView: UIImageView!
+    
+
+    @IBAction func testButtonClicked(_ sender: UIButton) {
+        
+        let vc = HostingTestView(rootView: TestView())
+        
+        present(vc, animated: true)
+        
+//        present(DetailViewController(), animated: true)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,21 +83,24 @@ class ViewController: UIViewController {
 //            thirdImageView.image = image3
 //        }
         //async let
-//        Task {
-//            let result = try await Network.shared.fetchThumbnailAsyncLet()
-//            
-//            posterImageView.image = result[0]
-//            secondImageView.image = result[1]
-//            thirdImageView.image = result[2]
-//        }
-        //taskgroup
         Task {
-           let value = try await Network.shared.fetchThumbnailTaskGroup()
+            print(#function, "1", Thread.isMainThread, Thread.current)
+            let result = try await Network.shared.fetchThumbnailAsyncLet()
             
-            posterImageView.image = value[0]
-            secondImageView.image = value[1]
-            thirdImageView.image = value[2]
+            print(#function, "2", Thread.isMainThread, Thread.current)
+            posterImageView.image = result[0]
+            secondImageView.image = result[1]
+            thirdImageView.image = result[2]
+            print(#function, "3", Thread.isMainThread, Thread.current)
         }
+        //taskgroup
+//        Task {
+//           let value = try await Network.shared.fetchThumbnailTaskGroup()
+//            
+//            posterImageView.image = value[0]
+//            secondImageView.image = value[1]
+//            thirdImageView.image = value[2]
+//        }
         
 //        Network.shared.fetchThumbnail { image in
 //            print(1)

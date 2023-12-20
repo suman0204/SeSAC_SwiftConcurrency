@@ -89,11 +89,14 @@ class Network {
     }
     
     //async 비동기로 작업할 함수에요~
+//    @MainActor
     func fetchThumbnailAsyncAwait(value: String) async throws -> UIImage {
         
         //jpD6z9fgNe7OqsHoDeAWQWoULde
         //bf5B7yMx62jYvJfZCF62rhdXcQ3.jpg
         //6jByCqeQXEu3RR5qvlTCBamJQED.jpg
+        
+        print(#function, "1", Thread.isMainThread, Thread.current)
 
         let url = URL(string: "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/\(value).jpg")!
 
@@ -102,6 +105,8 @@ class Network {
         //await: 비동기를 동기처럼 작업 할꺼니까, 응답 올 때까지 여기서 딱 기다려
         //URLSession이 통신하고 data와 response에 값이 들어갈 때까지 기다린다
         let (data, response) = try await URLSession.shared.data(for: request)
+        
+        print(#function, "2", Thread.isMainThread, Thread.current)
         
         guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
             throw JackError.invalidResponse
@@ -116,10 +121,14 @@ class Network {
         return image
     }
     
+    @MainActor
     func fetchThumbnailAsyncLet() async throws -> [UIImage] { //fetchThumbnailAsyncAwait가 비동기 이기 때문에 async throws를 붙인다
+        print(#function, "1", Thread.isMainThread, Thread.current)
         async let image1 = Network.shared.fetchThumbnailAsyncAwait(value: "jpD6z9fgNe7OqsHoDeAWQWoULde")
         async let image2 = Network.shared.fetchThumbnailAsyncAwait(value: "bf5B7yMx62jYvJfZCF62rhdXcQ3")
         async let image3 = Network.shared.fetchThumbnailAsyncAwait(value: "6jByCqeQXEu3RR5qvlTCBamJQED")
+        
+        print(#function, "2", Thread.isMainThread, Thread.current)
         
         return try await [image1, image2, image3] // try await -> 비동기 작업이 모두 배열에 담길 때까지 기다린다
     }
